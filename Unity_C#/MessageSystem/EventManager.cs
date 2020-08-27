@@ -4,21 +4,24 @@ using System.Linq;
 using System.Reflection;
 
 [System.Serializable]
-public enum EventType {
+public enum EventType
+{
 	TurnStart,
 	TurnEnd,
 	StoneSwap,
 	Attack
 }
 
-public struct MessageContext {
+public struct MessageContext
+{
 	Entity initiator;
 	Dictionary<string, object> parameters;
 
 	private static MessageContext _nullContext = new MessageContext ();
 	public static MessageContext NullContext { get { return _nullContext; } }
 
-	public bool HasParameter<T>(string name) {
+	public bool HasParameter<T>(string name)
+	{
 		if (!parameters.ContainsKey(name)) {
 			return false;
 		}
@@ -30,17 +33,20 @@ public struct MessageContext {
 		}
 	}
 
-	public static T Cast <T>(object o) {
+	public static T Cast <T>(object o)
+	{
 		return (T) o;
 	}
 
-	public static object DynamicCast(object o, Type t) {
+	public static object DynamicCast(object o, Type t)
+	{
 		MethodInfo castMethod = typeof(MessageContext).GetMethod("Cast").MakeGenericMethod(t);
 		return castMethod.Invoke(null, new object[] { o });
 	}
 
 	// RMF TODO: is there a better way of passing arguments?
-	public T GetParameter<T>(string name, T defaultValue = default(T)) {
+	public T GetParameter<T>(string name, T defaultValue = default(T))
+	{
 		if (!parameters.ContainsKey(name)) {
 			return default(T);
 		}
@@ -55,37 +61,47 @@ public struct MessageContext {
 
 
 
-public class EventManager : Singleton<EventManager> {
+public class EventManager : Singleton<EventManager>
+{
 	
 	public const float kfDefaultPriority = 100f;
 
-	private struct ResponseListener {
+	private struct ResponseListener
+	{
 		public float priority;
 		public Predicate<MessageContext> predicate;
 		public Action<MessageContext> receiver;
 
-		public ResponseListener(float priority, Predicate<MessageContext> predicate, Action<MessageContext> receiver) {
+		public ResponseListener(
+			float priority,
+			Predicate<MessageContext> predicate,
+			Action<MessageContext> receiver)
+		{
 			this.priority = priority;
 			this.predicate = predicate;
 			this.receiver = receiver;
 		}
 	}
 
-	private struct EventTrigger {
+	private struct EventTrigger
+	{
 		public EventType eventType;
 		public MessageContext context;
 
-		public EventTrigger(EventType eventType, MessageContext context) {
+		public EventTrigger(EventType eventType, MessageContext context)
+		{
 			this.eventType = eventType;
 			this.context = context;
 		}
 	}
 
-	private static bool AlwaysRespond(MessageContext context) {
+	private static bool AlwaysRespond(MessageContext context)
+	{
 		return true;
 	}
 
-	private static MethodInfo GetMethodInfo(Action action) {
+	private static MethodInfo GetMethodInfo(Action action)
+	{
 		return action.Method;
 	}
 
@@ -96,8 +112,10 @@ public class EventManager : Singleton<EventManager> {
 
 	private bool currentlyBroadcasting;
 
-	public void RegisterForMessages(EventType eventType,
-									Action<MessageContext> receiver) {
+	public void RegisterForMessages(
+		EventType eventType,
+		Action<MessageContext> receiver)
+	{
 		RegisterForMessages (eventType, receiver, AlwaysRespond, kfDefaultPriority);
 		//Delegate d = this.RegisterForMessages;
 		//this.GetType().GetMethod(this.RegisterForMessages);
@@ -112,10 +130,12 @@ public class EventManager : Singleton<EventManager> {
 	}
 	*/
 
-	public void RegisterForMessages(EventType eventType,
-									Action<MessageContext> receiver,
-									Predicate<MessageContext> predicate,
-									float priority = kfDefaultPriority) {
+	public void RegisterForMessages(
+		EventType eventType,
+		Action<MessageContext> receiver,
+		Predicate<MessageContext> predicate,
+		float priority = kfDefaultPriority)
+	{
 		if (!listeners.ContainsKey(eventType)) {
 			listeners.Add(eventType, new List<ResponseListener>());
 		}
@@ -133,27 +153,35 @@ public class EventManager : Singleton<EventManager> {
 		}
 	}
 
-	public Action<MessageContext> MakeMessageReceiver(Action action) {
+	public Action<MessageContext> MakeMessageReceiver(Action action)
+	{
 		return InternalMakeMessageReceiver (action.Target, action.Method);
 	}
 
-	public Action<MessageContext> MakeMessageReceiver<T>(Action<T> action) {
+	public Action<MessageContext> MakeMessageReceiver<T>(Action<T> action)
+	{
 		return InternalMakeMessageReceiver (action.Target, action.Method);
 	}
 
-	public Action<MessageContext> MakeMessageReceiver<T1, T2>(Action<T1, T2> action) {
+	public Action<MessageContext> MakeMessageReceiver<T1, T2>(Action<T1, T2> action)
+	{
 		return InternalMakeMessageReceiver (action.Target, action.Method);
 	}
 
-	public Action<MessageContext> MakeMessageReceiver<T1, T2, T3>(Action<T1, T2, T3> action) {
+	public Action<MessageContext> MakeMessageReceiver<T1, T2, T3>(Action<T1, T2, T3> action)
+	{
 		return InternalMakeMessageReceiver (action.Target, action.Method);
 	}
 
-	public Action<MessageContext> MakeMessageReceiver<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action) {
+	public Action<MessageContext> MakeMessageReceiver<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action)
+	{
 		return InternalMakeMessageReceiver (action.Target, action.Method);
 	}
 
-	private Action<MessageContext> InternalMakeMessageReceiver(object target, MethodInfo method) {
+	private Action<MessageContext> InternalMakeMessageReceiver(
+		object target,
+		MethodInfo method)
+	{
 		ParameterInfo[] parametersInfo = method.GetParameters();
 		Action<MessageContext> receiver = delegate(MessageContext mc) {
 			object[] parameters = new object[parametersInfo.Length];
@@ -175,7 +203,8 @@ public class EventManager : Singleton<EventManager> {
 		return receiver;
 	}
 
-	public void TriggerEvent(EventType triggeredEvent, MessageContext triggeringContext) {
+	public void TriggerEvent(EventType triggeredEvent, MessageContext triggeringContext)
+	{
 		queuedEvents.Enqueue(new EventTrigger(triggeredEvent, triggeringContext));
 		if (currentlyBroadcasting) {
 			return;

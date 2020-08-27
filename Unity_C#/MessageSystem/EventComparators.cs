@@ -13,18 +13,21 @@ public enum EventComparatorResult
 /*
 public abstract class DynamicEventComparator
 {
-	protected DynamicEventComparator(EventComparatorComponent_Global globalComparator) {
+	protected DynamicEventComparator(EventComparatorComponent_Global globalComparator)
+	{
 		comparatorComponents.Add (EventComponentType.Global, globalComparator);
 	}
 
-	public HashSet<EventComponentType> GetComparatorComponentTypes() {
+	public HashSet<EventComponentType> GetComparatorComponentTypes()
+	{
 		if (componentTypes == null) {
 			componentTypes = new HashSet<EventComponentType> (comparatorComponents.Keys);
 		}
 		return componentTypes;
 	}
 
-	public EventComparatorResult EvaluateEventResponse(DynamicEventMessage message) {
+	public EventComparatorResult EvaluateEventResponse(DynamicEventMessage message)
+	{
 		// we must have matching sets of components to be able to respond.
 		if (!message.GetParameterComponentTypes ().SetEquals (componentTypes)) {
 			return EventComparatorResult.Reject;
@@ -88,7 +91,9 @@ public abstract class EventComparator<E, P1, P2, P3, P4, C1, C2, C3, C4>
 		comparator4 = c4;
 	}
 
-	public static EventComparatorResult CombineComparatorResults(EventComparatorResult a, EventComparatorResult b)
+	public static EventComparatorResult CombineComparatorResults(
+		EventComparatorResult a,
+		EventComparatorResult b)
 	{
 		if (a == EventComparatorResult.Reject || b == EventComparatorResult.Reject) {
 			return EventComparatorResult.Reject;
@@ -161,14 +166,22 @@ public class EventComparatorComponent_Global : IEventComparatorComponent<EventPa
 	// higher posivite value means go first, 0 is default, lower negative value means go later
 	readonly float? responsePriority;
 
-	public EventComparatorComponent_Global(EventType acceptedEventType, float? responseChance, float? responsePriority) {
+	public EventComparatorComponent_Global(
+		EventType acceptedEventType,
+		float? responseChance,
+		float? responsePriority)
+	{
 		this.acceptedEventTypes = new HashSet<EventType> ();
 		this.acceptedEventTypes.Add(acceptedEventType);
 		this.responseChance = responseChance;
 		this.responsePriority = responsePriority;
 	}
 
-	public EventComparatorComponent_Global(HashSet<EventType> acceptedEventTypes, float? responseChance, float? responsePriority) {
+	public EventComparatorComponent_Global(
+		HashSet<EventType> acceptedEventTypes,
+		float? responseChance,
+		float? responsePriority)
+	{
 		this.acceptedEventTypes = acceptedEventTypes;
 		this.responseChance = responseChance;
 		this.responsePriority = responsePriority;
@@ -210,7 +223,8 @@ public abstract class EventComparatorComponent_Character<T> : IEventComparatorCo
 	const int tempSelfCharacterID = 0;
 	readonly bool? self;
 
-	public EventComparatorComponent_Character(bool? self) {
+	public EventComparatorComponent_Character(bool? self)
+	{
 		this.self = self;
 	}
 
@@ -252,7 +266,9 @@ public class EventComparatorComponent_Actor : EventComparatorComponent_Character
 	}
 	*/
 
-	protected override int GetCharacterFromEventComponent(EventParametersComponent_Actor eventComponent) {
+	protected override int GetCharacterFromEventComponent(
+		EventParametersComponent_Actor eventComponent)
+	{
 		return eventComponent.actorID;
 	}
 }
@@ -276,7 +292,9 @@ public class EventComparatorComponent_Target : EventComparatorComponent_Characte
 	}
 	*/
 
-	public override EventComparatorResult EvaluateEventComponent (EventParametersComponent_Target eventComponent) {
+	public override EventComparatorResult EvaluateEventComponent (
+		EventParametersComponent_Target eventComponent)
+	{
 		EventComparatorResult parentResult = base.EvaluateEventComponent (eventComponent);
 		if (parentResult == EventComparatorResult.Reject) {
 			return parentResult;
@@ -293,7 +311,9 @@ public class EventComparatorComponent_Target : EventComparatorComponent_Characte
 		}
 	}
 
-	protected override int GetCharacterFromEventComponent(EventParametersComponent_Target eventComponent) {
+	protected override int GetCharacterFromEventComponent(
+		EventParametersComponent_Target eventComponent)
+	{
 		return eventComponent.targetID;
 	}
 }

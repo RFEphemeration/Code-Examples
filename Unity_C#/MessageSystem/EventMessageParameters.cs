@@ -6,16 +6,19 @@ using UnityEngine.Assertions;
 
 
 
-public enum EventComponentType {
+public enum EventComponentType
+{
 	None,
 	Global,
 	Target,
 	Actor
 }
 
-public abstract class DynamicEventMessage {
+public abstract class DynamicEventMessage
+{
 
-	public HashSet<EventComponentType> GetParameterComponentTypes() {
+	public HashSet<EventComponentType> GetParameterComponentTypes()
+	{
 		if (componentTypes == null) {
 			componentTypes = new HashSet<EventComponentType> (parameterComponents.Keys);
 		}
