@@ -123,9 +123,11 @@ public class EventManager : Singleton<EventManager>
 	}
 
 	/*
-	public void RegisterForMessages(EventType eventType,
-									 object target,
-									 MethodInfo method) {
+	public void RegisterForMessages(
+		EventType eventType,
+		object target,
+		MethodInfo method)
+	{
 		RegisterForMessages (eventType, MakeMessageReceiver (target, method), AlwaysRespond, kfDefaultPriority);
 	}
 	*/
