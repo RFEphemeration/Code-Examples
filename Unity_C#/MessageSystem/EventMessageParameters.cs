@@ -46,10 +46,10 @@ public abstract class DynamicEventMessage
 
 public abstract class EventMessage
 {
-	public virtual bool GetParameters<P>(out P parameters)
+	public virtual bool GetParameter<P>(out P parameter)
 		where P : class, IEventParametersComponent
 	{
-		parameters = null;
+		parameter = null;
 		return false;
 	}
 }
@@ -71,6 +71,24 @@ public abstract class EventMessage<P1, P2, P3, P4> : EventMessage
 		parameters2 = p2;
 		parameters3 = p3;
 		parameters4 = p4;
+	}
+	public override bool GetParameter<P>(out P parameter)
+		where P : class, IEventParametersComponent
+	{
+		if (typeof(P) == typeof(P1))
+			parameters = parameters1;
+		else if (typeof(P) == typeof(P2))
+			parameters = parameters2;
+		else if (typeof(P) == typeof(P3))
+			parameters = parameters3;
+		else if (typeof(P) == typeof(P4)
+			parameters = parameters4;
+		else
+			parameters = null;
+		
+		if (parameters == null)
+			return false;
+		return true;
 	}
 }
 
