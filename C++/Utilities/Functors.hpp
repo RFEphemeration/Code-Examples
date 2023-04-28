@@ -11,37 +11,6 @@
 namespace Farb
 {
 
-/*
-struct BoxedFunctorInterface
-{
-	virtual ~BoxedFunctorInterface() { };
-
-	virtual int ParameterCount();
-};
-
-template<typename TRet, typename ...TArgs>
-struct BoxedFunctor : BoxedFunctorInterface
-{
-	Functor<TRet, TArgs...> * functor
-
-	~BoxedFunctor()
-	{
-		destroy(functor)
-	};
-
-	int ParameterCount()
-	{
-		return sizeof...(Ts);
-	}
-
-	template<int N>
-	std::type_info ParameterType()
-	{
-		return typeid(NthTypeOf<N, TArgs...>)
-	}
-};
-*/
-
 template<typename TRet, typename ...TArgs>
 struct Functor
 {
@@ -62,13 +31,6 @@ struct Functor<void, TArgs...>
 	virtual ~Functor() { };
 };
 
-/*
-template<template <typename... Ts > typename TContainer>
-using TypeList_Functor = Functor<Ts...>;
-
-template<typename TRet, template <typename... TArgs > typename TContainer>
-using TypeList_Functor = Functor<TRet, TArgs...>;
-*/
 
 template<typename TRet, typename ...TArgs>
 struct FunctionPointer : public Functor<TRet, TArgs...>
@@ -177,40 +139,6 @@ CurriedFunctor<TRet, TypeList<>, T &, TypeList<TArgs...> > * MakeCurriedMember(
 		t
 	};
 }
-
-/*
-template<
-	typename TRet,
-	typename ...TArgs,
-	typename TArg,
-	typename ...T2Args>
-struct ComposedFunctors
-: public TypeList_Functor<
-	TRet,
-	TypeListUnion<
-		SplitTypeList<TArg, TypeList<TArgs...> >::Before,
-		TypeList<T2Args...>
-		SplitTypeList<TArg, TypeList<TArgs...> >::After
-	>	
->
-{
-	using Before = typename SplitTypeList<TArg, TypeList<TArgs...> >::Before;
-	using IndexBefore = std::make_index_sequence<Before>;
-}
-
-
-template<
-	typename TRet,
-	typename... TArgs,
-	typename TArg,
-	typename... T2Args>
-struct ComposedFunctors<
-	TRet,
-	typename SplitTypeList<TArg, TArgs>::Before,
-	TArg,
-	typename SPlitTypeList<TArg, TArgs>::After,
-	TypeList<T2Args...> >;
-*/
 
 template<
 	typename TRet,
@@ -413,7 +341,7 @@ Functor<TRemainder...> Curry(Functor<TRemainder..., TValue, TRest...> & functor,
 // maybe inference can just catch all this?
 // type inference probably can't catch a return value...
 template<template<typename, typename...> typename TContainer, typename TIn, typename TOut, typename ... TInArgs>
-TContainer<TOut, TInArgs...> MapApply(
+TContainer<TOut, TInArgs...> Map(
 	const TContainer<TIn, TInArgs...>& in,
 	Functor<TOut, const TIn &> & func)
 {
