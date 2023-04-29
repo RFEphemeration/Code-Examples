@@ -9,27 +9,8 @@ public enum ComparatorResult
 	Reject
 }
 
-public interface IComparator
+public static class ComparatorResultExtensions
 {
-	public abstract ComparatorResult Evaluate(Event message);
-}
-
-public interface IComparatorComponent
-{
-	public ComparatorResult Evaluate(Event message);
-}
-
-public static class Comparator
-{
-	public static IComparator Make<C1, C2, C3, C4>(C1 c1, C2 c2, C3 c3, C4 c4)
-		where C1 : IComparatorComponent
-		where C2 : IComparatorComponent
-		where C3 : IComparatorComponent
-		where C4 : IComparatorComponent
-	{
-		return new Comparator<C1, C2, C3, C4>(c1, c2, c3, c4);
-	}
-
 	public static ComparatorResult Combine(this ComparatorResult a, ComparatorResult b)
 	{
 		if (a == ComparatorResult.Reject || b == ComparatorResult.Reject)
@@ -47,39 +28,35 @@ public static class Comparator
 	}
 }
 
-public class Comparator< C1, C2, C3, C4> : IComparator
-	where C1 : IComparatorComponent
-	where C2 : IComparatorComponent
-	where C3 : IComparatorComponent
-	where C4 : IComparatorComponent
+public interface IComparator
 {
-	readonly C1 comparator1;
-	readonly C2 comparator2;
-	readonly C3 comparator3;
-	readonly C4 comparator4;
+	public abstract ComparatorResult Evaluate(Event message);
+}
 
-	public Comparator(C1 c1, C2 c2, C3 c3, C4 c4)
+public interface IComparatorComponent
+{
+	public abstract ComparatorResult Evaluate(Event message);
+}
+
+public class Comparator: IComparator
+{
+	readonly IComparatorComponent[] comparators;
+
+	public Comparator(params IComparatorComponent[] comparators)
 	{
-		comparator1 = c1;
-		comparator2 = c2;
-		comparator3 = c3;
-		comparator4 = c4;
+		this.comparators = comparators;
 	}
 
+	// rmf note: could consider passing game state through here for comparisons
 	public ComparatorResult Evaluate(Event message)
 	{
 		var response = ComparatorResult.Neutral;
-		response = response.Combine(comparator1.Evaluate(message));
-		response = response.Combine(comparator2.Evaluate(message));
-		response = response.Combine(comparator3.Evaluate(message));
-		response = response.Combine(comparator4.Evaluate(message));
+		foreach (var comparator in comparators)
+		{
+			response = response.Combine(comparator.Evaluate(message));
+			// rmf note: could consider early-return for Reject
+		}
 		return response;
-	}
-
-	private ComparatorResult EvaluateComponent<C>(C comparator, Event message)
-		where C : IComparatorComponent
-	{
-		return comparator.Evaluate(message);
 	}
 }
 
@@ -89,15 +66,14 @@ public abstract class IComparatorComponent<T> : IComparatorComponent where T : c
 
 	public virtual ComparatorResult Evaluate (Event message)
 	{
-		T parameter;
-		bool success = message.GetParameter<T>(out parameter);
-		if (!success) {
+		T component = message.GetComponent<T>();
+		if (component == null) {
 			return ComparatorResult.Reject;
 		}
-		return EvaluateComponent(parameter);
+		return EvaluateComponent(component);
 	}
 
-	public abstract ComparatorResult EvaluateComponent(T eventComponent);
+	protected abstract ComparatorResult EvaluateComponent(T eventComponent);
 }
 
 public class ComparatorComponent_Null : IComparatorComponent<EventComponent_Null>
@@ -109,7 +85,7 @@ public class ComparatorComponent_Null : IComparatorComponent<EventComponent_Null
 		return ComparatorResult.Neutral;
 	}
 
-	public override ComparatorResult EvaluateComponent(EventComponent_Null eventComponent)
+	protected override ComparatorResult EvaluateComponent(EventComponent_Null eventComponent)
 	{
 		return ComparatorResult.Neutral;
 	}
@@ -137,7 +113,7 @@ public class ComparatorComponent_Global : IComparatorComponent<EventComponent_Gl
 		this.responseChance = responseChance;
 	}
 
-	public override ComparatorResult EvaluateComponent(EventComponent_Global eventComponent)
+	protected override ComparatorResult EvaluateComponent(EventComponent_Global eventComponent)
 	{
 		var result = ComparatorResult.Neutral;
 		if (acceptedEventTypes == null) {
@@ -163,34 +139,20 @@ public abstract class ComparatorComponent_Character<T> : IComparatorComponent<T>
 	readonly int selfId = 0;
 	readonly bool? self;
 
-	public ComparatorComponent_Character(bool? self, int selfId)
+	public ComparatorComponent_Character(int selfId, bool? self)
 	{
-		this.self = self;
 		this.selfId = selfId;
+		this.self = self;
 	}
 
-	public override ComparatorResult EvaluateComponent(T eventComponent)
+	protected override ComparatorResult EvaluateComponent(T eventComponent)
 	{
 		int characterId = GetCharacterFromEventComponent (eventComponent);
 		if (self.HasValue) {
-			if (characterId == selfId) {
-				if (self.Value)
-				{
-					return ComparatorResult.Accept;
-				}
-				else
-				{
-					return ComparatorResult.Reject;
-				}
+			if (self.Value == (characterId == selfId)) {
+				return ComparatorResult.Accept;
 			} else {
-				if (self.Value)
-				{
-					return ComparatorResult.Reject;
-				}
-				else
-				{
-					return ComparatorResult.Accept;
-				}
+				return ComparatorResult.Reject;
 			}
 		} else {
 			return ComparatorResult.Neutral;
@@ -203,8 +165,8 @@ public abstract class ComparatorComponent_Character<T> : IComparatorComponent<T>
 public class ComparatorComponent_Actor : ComparatorComponent_Character<EventComponent_Actor>
 {
 
-	public ComparatorComponent_Actor (bool? self, int selfId)
-		: base (self, selfId)
+	public ComparatorComponent_Actor (int selfId, bool? self)
+		: base (selfId, self)
 	{
 	}
 
@@ -215,17 +177,19 @@ public class ComparatorComponent_Actor : ComparatorComponent_Character<EventComp
 	}
 }
 
+// rmf note: could alternatively implement multiple smaller / simpler target comparators
+// such as TargetSelf, TargetSingle
 public class ComparatorComponent_Target : ComparatorComponent_Character<EventComponent_Target>
 {
 	readonly bool? singleTarget;
 
-	public ComparatorComponent_Target(bool? self, int selfId, bool? singleTarget)
-		: base (self, selfId)
+	public ComparatorComponent_Target(int selfId, bool? self, bool? singleTarget)
+		: base (selfId, self)
 	{
 		this.singleTarget = singleTarget;
 	}
 
-	public override ComparatorResult EvaluateComponent(
+	protected override ComparatorResult EvaluateComponent(
 		EventComponent_Target eventComponent)
 	{
 		ComparatorResult parentResult = base.EvaluateComponent(eventComponent);
@@ -262,7 +226,7 @@ public abstract class ComparatorComponent_Damage : IComparatorComponent<EventCom
 		this.max = max;
 	}
 
-	public override ComparatorResult EvaluateComponent(EventComponent_Damage eventComponent)
+	protected override ComparatorResult EvaluateComponent(EventComponent_Damage eventComponent)
 	{
 		if (min.HasValue)
 		{
