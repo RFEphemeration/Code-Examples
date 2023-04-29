@@ -17,15 +17,26 @@ struct Pair<T1, T2>
 
 public class EventManager
 {
-	public static EventManager Instance { get; set; }
+	private static EventManager _Instance;
+	public static EventManager Instance
+	{
+		get
+		{
+			if (_Instance == null)
+			{
+				_Instance = new EventManager();
+			}
+			return _Instance;
+		}
+	}
 
-	private List<Pair<IComparator, Action<Event>>> listeners = new();
+	private List<Pair<Comparator, Action<Event>>> listeners = new();
 
 	private Queue<Event> queuedEvents = new();
 
-	public void AddListener(IComparator comparator, Action<Event> response)
+	public void AddListener(Comparator comparator, Action<Event> response)
 	{
-		listeners.Add(new Pair<IComparator, Action<Event>>(comparator, response));
+		listeners.Add(new Pair<Comparator, Action<Event>>(comparator, response));
 	}
 
 	public void BroadcastEvent(Event message)

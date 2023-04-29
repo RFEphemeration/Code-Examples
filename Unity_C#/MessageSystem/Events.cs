@@ -8,17 +8,12 @@ public enum EventType
 	Attack
 }
 
+// rmf note: empty interface is for nominal typing purposes
 public interface IEventComponent
 {
 }
 
-public interface IEvent
-{
-	public T GetComponent<T>()
-		where T : class, IEventComponent;
-}
-
-public class Event : IEvent
+public class Event
 {
 	readonly IEventComponent[] components;
 
@@ -28,8 +23,6 @@ public class Event : IEvent
 	}
 
 	// assumes that we won't have multiple components of the same type
-
-
 	public T GetComponent<T>()
 		where T : class, IEventComponent
 	{

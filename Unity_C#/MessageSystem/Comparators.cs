@@ -28,17 +28,12 @@ public static class ComparatorResultExtensions
 	}
 }
 
-public interface IComparator
-{
-	public abstract ComparatorResult Evaluate(Event message);
-}
-
 public interface IComparatorComponent
 {
 	public abstract ComparatorResult Evaluate(Event message);
 }
 
-public class Comparator: IComparator
+public class Comparator
 {
 	readonly IComparatorComponent[] comparators;
 
@@ -165,8 +160,8 @@ public abstract class ComparatorComponent_Character<T> : IComparatorComponent<T>
 public class ComparatorComponent_Actor : ComparatorComponent_Character<EventComponent_Actor>
 {
 
-	public ComparatorComponent_Actor (int selfId, bool? self)
-		: base (selfId, self)
+	public ComparatorComponent_Actor (int selfId, bool? isActor)
+		: base (selfId, isActor)
 	{
 	}
 
@@ -183,8 +178,8 @@ public class ComparatorComponent_Target : ComparatorComponent_Character<EventCom
 {
 	readonly bool? singleTarget;
 
-	public ComparatorComponent_Target(int selfId, bool? self, bool? singleTarget)
-		: base (selfId, self)
+	public ComparatorComponent_Target(int selfId, bool? isTarget, bool? singleTarget)
+		: base (selfId, isTarget)
 	{
 		this.singleTarget = singleTarget;
 	}
